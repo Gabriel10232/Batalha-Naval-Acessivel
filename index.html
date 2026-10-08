@@ -314,14 +314,14 @@
                 Escolha o tamanho do tabuleiro (ex: 5x5, de 1x1 a 10x10):
             </label>
 
-            <input type="text" id="tamanho" placeholder="Ex: 5x5" maxlength="5" aria-describedby="ajuda-tamanho">
+            <input type="text" id="tamanho" placeholder="Ex: 5x5" maxlength="5" aria-describedby="ajuda-tamanho" aria-label="Escolher tamanho do tabuleiro, por exemplo 5x5">
             <p id="ajuda-tamanho" class="sr-only">Digite linhas vezes colunas, por exemplo 5x5. São permitidos valores de 1x1 até 10x10.</p>
 
             <label for="qtdBarcos">
                 Quantidade de barcos por jogador (máximo 5):
             </label>
 
-            <input type="number" id="qtdBarcos" placeholder="Ex: 3" min="1" max="5" aria-describedby="ajuda-barcos">
+            <input type="number" id="qtdBarcos" placeholder="Ex: 3" min="1" max="5" aria-describedby="ajuda-barcos" aria-label="Escolher a quantidade de barcos, de 1 a 5">
             <p id="ajuda-barcos" class="sr-only">Digite um número inteiro entre 1 e 5.</p>
 
             <button onclick="iniciarJogo()" aria-label="Começar o jogo">
