@@ -60,6 +60,16 @@
             text-align: left;
         }
 
+        #ouvirInstrucoes {
+            display: block;
+            margin: 0 auto 20px;
+            background-color: #198754;
+        }
+
+        #ouvirInstrucoes:hover:not(:disabled) {
+            background-color: #146c43;
+        }
+
         #modoSelecao {
             background-color: white;
             padding: 20px;
@@ -278,18 +288,13 @@
 
         <h1>⚓ Batalha das Matrizes</h1>
 
-        <div id="aviso-acessibilidade" role="alert" aria-live="assertive" tabindex="-1">
-            Aviso de acessibilidade: você não precisa olhar para jogar. Use a tecla Tab para navegar entre as opções
-            e os campos. Use Enter para selecionar ou confirmar uma opção. As instruções e os resultados também são
-            anunciados por voz quando o recurso estiver disponível.
-        </div>
+        <button id="ouvirInstrucoes" type="button" onclick="lerInstrucoes()" aria-label="Jogo Naval narrado">
+            !Aviso!
+        </button>
 
-        <p id="instrucoes" tabindex="-1">
-            Escolha se quer jogar contra outra pessoa (PvP) ou contra o computador (PvE). Assim que cada jogador
-            termina de posicionar seus navios, eles ficam ocultos na tela — ninguém consegue ver onde o adversário
-            colocou os barcos, e a posição também não é narrada por voz. No modo PvE, o computador calcula sozinho a
-            posição dos próprios navios usando um tipo de matriz escolhido aleatoriamente por ele.
-        </p>
+        <button id="ouvirInstrucoes" type="button" onclick="lerInstrucoes()" aria-label="Use a tecla Tab para navegar entre as opções e os campos. Use Enter para selecionar ou confirmar uma opção. As instruções e os resultados também são anunciados por voz quando o recurso estiver disponível, aperte tab para escolher como quer jogar">
+            🔊 Ouvir instruções
+        </button>
 
         <button onclick="reiniciarJogo()" id="reiniciar" aria-label="Reiniciar o jogo">Reiniciar</button>
 
@@ -568,12 +573,32 @@
             if (!("speechSynthesis" in window)) return;
             try {
                 window.speechSynthesis.cancel();
+                window.speechSynthesis.resume();
                 const utter = new SpeechSynthesisUtterance(texto);
                 utter.lang = "pt-BR";
+                utter.rate = 0.95;
+                const vozes = window.speechSynthesis.getVoices();
+                const vozPortugues = vozes.find(voz => voz.lang.toLowerCase().startsWith("pt"));
+                if (vozPortugues) utter.voice = vozPortugues;
+                // Fala imediatamente, mantendo a chamada dentro do evento do Tab.
                 window.speechSynthesis.speak(utter);
             } catch (e) {
                 // síntese de voz indisponível, seguimos apenas com texto/aria-live
             }
+        }
+
+        function textoDasInstrucoesIniciais() {
+            const instrucoes = document.getElementById("instrucoes");
+            return [
+                "Use a tecla Tab para navegar entre as opções e os campos. Use Enter para selecionar ou confirmar uma opção. As instruções e os resultados também são anunciados por voz quando o recurso estiver disponível.",
+                "Instruções iniciais do jogo.",
+                instrucoes ? instrucoes.textContent.trim() : "",
+                "Escolha um botão para começar."
+            ].filter(Boolean).join(" ");
+        }
+
+        function lerInstrucoes() {
+            falar(textoDasInstrucoesIniciais());
         }
 
         function escolherModo(modo) {
@@ -1040,17 +1065,25 @@
 
         // Relembra a navegação acessível sempre que o site é aberto.
         window.addEventListener("load", function () {
-            const aviso = document.getElementById("aviso-acessibilidade");
+            // Tenta falar automaticamente ao abrir a página.
+            setTimeout(lerInstrucoes, 250);
             const instrucoes = document.getElementById("instrucoes");
-            const textoInicial = [
-                "Instruções do jogo.",
-                aviso ? aviso.textContent.trim() : "",
-                instrucoes ? instrucoes.textContent.trim() : "",
-                "Escolha um botão para começar."
-            ].filter(Boolean).join(" ");
-            falar(textoInicial);
             if (instrucoes) instrucoes.focus();
         });
+
+        // Alguns navegadores bloqueiam voz automática. O primeiro Tab libera
+        // a leitura sem exigir que a pessoa enxergue.
+        let leituraInicialLiberada = false;
+        function liberarLeituraInicial() {
+            if (leituraInicialLiberada) return;
+            leituraInicialLiberada = true;
+            lerInstrucoes();
+        }
+        document.addEventListener("keydown", function (evento) {
+            if (evento.key === "Tab") {
+                liberarLeituraInicial();
+            }
+        }, true);
 
         // Anuncia o nome e a função de cada botão ao receber foco e ao ser acionado.
         // Isso ajuda quem navega somente pelo teclado ou usa leitor de tela.
@@ -1064,7 +1097,20 @@
                 if (!botao.disabled) falar(`${nome}.`);
             });
         });
-    </script>
+
+        
+        // Ao passar pelo segundo botão de aviso, oculta os dois botões.
+        const botoesDeAviso = document.querySelectorAll("#ouvirInstrucoes");
+        if (botoesDeAviso.length > 1) {
+            const ocultarBotoesDeAviso = function () {
+                botoesDeAviso.forEach(function (botao) {
+                    botao.style.display = "none";
+                });
+            };
+            botoesDeAviso[1].addEventListener("focus", ocultarBotoesDeAviso, { once: true });
+            botoesDeAviso[1].addEventListener("mouseenter", ocultarBotoesDeAviso, { once: true });
+        }
+         </script>
 </body>
 
 </html>
